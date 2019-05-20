@@ -1,0 +1,10 @@
+install.sh
+*~
+dist
+*.sh
+result*
+teste*
+*.pyc
+*.tar
+*.tar.bz2
+*.gz
