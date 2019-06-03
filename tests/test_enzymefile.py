@@ -1,18 +1,19 @@
 import sys
 import os
-sys.path.insert(0, os.getcwd() + '/../')
 import unittest
-from EnzymeKegg import *
-from DBGETReader import *
+from enzymefile.enzymefile import EnzymeFile 
+from dbgetreader import *
 import re
-
+import pprint
 
 class test_EnzymeKegg(unittest.TestCase):
 
     def setUp(self):
 
-        dbgetr = DBGETReader('./fixtures/enzyme')
-        self.enzyme = EnzymeKegg(dbgetr)
+        dbget = DBGET(file_to_read='./tests/fixtures/enzyme')
+        dbgetr = DBGETReader(reader=dbget)
+
+        self.enzyme = EnzymeFile(dbgetr)
 
     def test_entry_entry_records(self):
 
@@ -20,7 +21,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         data = self.enzyme.entry_entry_records(string)
 
-        self.assertEquals(data['ec_number'], '1.1.1.5')
+        self.assertEqual(data['ec_number'], '1.1.1.5')
 
     def test_is_obsolete_ec(self):
 
@@ -36,7 +37,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         expected = [ '1.1.1.1', '2.7.7.96', '3.6.1.13', '1.1.1.2', '1.1.1.3', '3.6.1.59', '3.6.1.58' ]
 
-        self.assertEquals( len(result), 7 )
+        self.assertEqual( len(result), 7 )
         self.assertTrue( set(expected) == set(result) )
 
     def test_incomplete_ec_numbers(self):
@@ -45,7 +46,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         expected = []
 
-        self.assertEquals( len(result), 0 )
+        self.assertEqual( len(result), 0 )
         self.assertTrue( set(expected) == set(result) )
 
     def test_generate_enzyme_data(self):
@@ -79,13 +80,13 @@ class test_EnzymeKegg(unittest.TestCase):
             data = self.enzyme.enzyme_entries[enzyme]
             break
 
-        self.assertEquals(data['orthology'][0], 'K13987')
+        self.assertEqual(data['orthology'][0], 'K00001')
 
     def test_orthology_number(self):
 
         string = 'K07514  enoyl-co_a hydratase / 3-hydroxyacyl-co_a dehydrogenase / 3,2-trans-enoyl-co_a isomerase'
 
-        self.assertEquals(self.enzyme.orthology_number(string), 'K07514')
+        self.assertEqual(self.enzyme.orthology_number(string), 'K07514')
 
     def test_genome_genes(self):
 
@@ -111,20 +112,20 @@ class test_EnzymeKegg(unittest.TestCase):
 
         string = '    NAD-specific aromatic alcohol dehydrogenase;  '
 
-        self.assertEquals(self.enzyme.name(string),
+        self.assertEqual(self.enzyme.name(string),
                           'NAD-specific aromatic alcohol dehydrogenase')
 
     def test_map_number(self):
 
         string = 'ec00260  Glycine, serine and threonine metabolism'
 
-        self.assertEquals(self.enzyme.map_number(string), '00260')
+        self.assertEqual(self.enzyme.map_number(string), '00260')
 
     def test_organism_code(self):
 
         string = 'HSA: 124(ADH1A) 125(ADH1B) 126(ADH1C) 127(ADH4) 128(ADH5) 130(ADH6) 131(ADH7)'
 
-        self.assertEquals(self.enzyme.organism_code(string), 'hsa')
+        self.assertEqual(self.enzyme.organism_code(string), 'hsa')
 
     def test_maps_by_ec_number(self):
 
@@ -144,7 +145,7 @@ class test_EnzymeKegg(unittest.TestCase):
             '01120',
             '01130']
 
-        self.assertEquals(
+        self.assertEqual(
             self.enzyme.maps_by_ec_number('1.1.1.1'),
             expected_maps)
 
@@ -152,7 +153,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         expected_names = ['homoserine dehydrogenase', 'HSDH', 'HSD']
 
-        self.assertEquals(
+        self.assertEqual(
             self.enzyme.names_by_ec_number('1.1.1.3'),
             expected_names)
 
@@ -160,14 +161,14 @@ class test_EnzymeKegg(unittest.TestCase):
 
         self.max_diff = None
 
-        self.assertEquals(
+        self.assertEqual(
             len(self.enzyme.organisms_by_ec_number('1.1.1.1')), 3427)
 
     def test_organisms_and_genes_by_ec_number(self):
 
         self.max_diff = None
 
-        self.assertEquals(
+        self.assertEqual(
             len(self.enzyme.organism_and_genes_by_ec_number('1.1.1.1')), 3427)
 
     def test_ec_numbers_by_organism(self):
@@ -183,39 +184,39 @@ class test_EnzymeKegg(unittest.TestCase):
             '3.6.1.59',
             '2.7.7.96']
 
-        self.assertEquals(ec_numbers, expected_ecs)
+        self.assertEqual(ec_numbers, expected_ecs)
 
     def test_ec_numbers_by_organism_void(self):
 
         ec_numbers = self.enzyme.ec_numbers_by_organism(
             'this_organism_doesnt_exist')
-        self.assertEquals(ec_numbers, [])
+        self.assertEqual(ec_numbers, [])
 
     def test_organism_and_genes_by_ec_number(self):
 
         data = self.enzyme.organism_and_genes_by_ec_number('2.7.7.96')
 
         self.assertTrue(len(data) == 9)
-        self.assertEquals(data['xla'], ['108713048', '432263'])
+        self.assertEqual(data['xla'], ['108713048', '432263'])
 
     def test_ec_numbers_by_gene(self):
 
         data = self.enzyme.ec_numbers_by_gene('xla:108713048')
 
-        self.assertEquals(data, ['3.6.1.13', '3.6.1.58', '2.7.7.96'])
+        self.assertEqual(data, ['3.6.1.13', '3.6.1.58', '2.7.7.96'])
 
     def test_ec_numbers_by_gene_void(self):
 
         data = self.enzyme.ec_numbers_by_gene('theres_not_found_gene_here')
 
-        self.assertEquals(data, [])
+        self.assertEqual(data, [])
 
     def test_all_genes_and_its_ec_numbers(self):
 
         data = self.enzyme.all_genes_and_its_ec_numbers()
 
         self.assertTrue(isinstance(data, dict))
-        self.assertEquals(
+        self.assertEqual(
             data['xla:108713048'], [
                 '3.6.1.13', '3.6.1.58', '2.7.7.96'])
 
@@ -225,19 +226,19 @@ class test_EnzymeKegg(unittest.TestCase):
 
         expected_genes = [
             'hsa:11164',
-            'xtr:549367',
-            'acan:aca1_131000',
-            'acan:aca1_177470',
+            'ptr:450306',
+            'pps:100977876',
+            'ggo:101148720',
             'xla:108713048',
             'xla:432263',
-            'pps:100977876',
+            'xtr:549367',
             'sasa:100196024',
             'sasa:106609278',
-            'gtt:guithdraft_166567',
-            'ggo:101148720',
-            'ptr:450306']
+            'acan:aca1_131000',
+            'acan:aca1_177470',
+            'gtt:guithdraft_166567']
 
-        self.assertEquals(data, expected_genes)
+        self.assertEqual(data, expected_genes)
 
     def test_genes_by_ec_number_void(self):
 
@@ -245,7 +246,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         expected_genes = []
 
-        self.assertEquals(data, expected_genes)
+        self.assertEqual(data, expected_genes)
 
     def test_all_ec_numbers(self):
 
@@ -317,7 +318,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         self.assertTrue(len(data) > 1)
         self.assertTrue(isinstance(data, list))
-        self.assertEquals(data, expected_ecs)
+        self.assertEqual(data, expected_ecs)
 
     def test_all_organism_ecs(self):
 
@@ -332,7 +333,7 @@ class test_EnzymeKegg(unittest.TestCase):
 
         self.assertTrue(len(data) > 1)
         self.assertTrue(isinstance(data, dict))
-        self.assertEquals(data['abe'], expected_ecs)
+        self.assertEqual(data['abe'], expected_ecs)
 
 
 if __name__ == "__main__":
