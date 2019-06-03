@@ -8,7 +8,7 @@ setup(
     license='BSD',
     description='Tool to read DBGET Kegg enzyme file.',
     long_description='Tool to read DBGET Kegg enzyme file',
-    packages=[ 'enzyme' ],
+    packages=[ 'enzymefile' ],
     platforms='Linux',
     url='http://bioinfoteam.fiocruz.br/keggreader',
     install_requires=[],
